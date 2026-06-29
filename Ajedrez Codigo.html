@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHESSDX 360 | Diagnóstico Ajedrecístico</title>
+<style>
+:root{
+  --bg:#12100c;--bg2:#1b1710;--card:#221d15;--card2:#2b241a;--text:#f7ecd8;--muted:#b8aa91;
+  --line:#443926;--gold:#d6aa4f;--gold2:#f0ce7a;--green:#3f6f4a;--green2:#6a9f68;
+  --red:#d45345;--orange:#e38b37;--yellow:#e2bd4d;--blue:#557bd9;--ivory:#f1dcb7;
+  --shadow:0 22px 60px rgba(0,0,0,.35);--radius:22px;--font:Inter,Segoe UI,Arial,sans-serif;
+  --light:#f0d9b5;--dark:#b58863;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);background:
+radial-gradient(circle at top left,rgba(214,170,79,.18),transparent 32rem),
+linear-gradient(135deg,var(--bg),#271b12 100%);color:var(--text);min-height:100vh}
+body.lightmode{
+  --bg:#f5efe2;--bg2:#fff8ea;--card:#fffdf7;--card2:#f6eddc;--text:#20170d;--muted:#766a58;--line:#d8c6a8;--shadow:0 18px 44px rgba(73,49,22,.12)
+}
+.app{max-width:1500px;margin:0 auto;padding:20px}
+header{position:sticky;top:10px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:14px;background:rgba(34,29,21,.82);backdrop-filter:blur(15px);border:1px solid var(--line);border-radius:999px;padding:11px 14px 11px 18px;box-shadow:var(--shadow)}
+body.lightmode header{background:rgba(255,253,247,.84)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold),#7c4a22);color:#160e06;font-size:1.6rem;font-weight:900;box-shadow:0 12px 25px rgba(214,170,79,.25)}
+h1{font-size:1.08rem;margin:0;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--muted);font-size:.77rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:999px;padding:10px 14px;font-weight:800;cursor:pointer;transition:.15s;user-select:none}
+button:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(0,0,0,.16)}
+button.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1d1306;border:0}
+button.danger{background:#4a201b;color:#ffd0ca;border-color:#7e3329}
+button.good{background:#1d3926;color:#caffe0;border-color:#366247}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;margin:22px 0}
+.card{background:linear-gradient(180deg,rgba(34,29,21,.96),rgba(34,29,21,.9));border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--radius);padding:22px}
+body.lightmode .card{background:linear-gradient(180deg,rgba(255,253,247,.96),rgba(255,253,247,.9))}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(214,170,79,.15);color:var(--gold2);border:1px solid rgba(214,170,79,.25);font-weight:900;font-size:.82rem}
+body.lightmode .eyebrow{color:#6b4813;background:#fff2ce}
+.hero h2{font-size:clamp(2rem,4vw,4.5rem);line-height:.95;margin:16px 0 14px;letter-spacing:-.055em}
+.hero p{color:var(--muted);line-height:1.65;margin:0 0 16px}
+.notice{margin-top:14px;border:1px solid rgba(214,170,79,.32);background:rgba(214,170,79,.12);border-radius:18px;color:var(--text);padding:14px;line-height:1.55;font-size:.88rem}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:16px}
+.kpi span{display:block;color:var(--muted);font-size:.8rem;font-weight:700}.kpi strong{font-size:2rem;display:block;margin-top:6px;color:var(--gold2)}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.sidebar{position:sticky;top:92px;display:grid;gap:16px}
+.title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.title h3{margin:0;font-size:1.22rem;letter-spacing:-.03em}.title p{margin:5px 0 0;color:var(--muted);line-height:1.45;font-size:.9rem}
+.badge{display:inline-flex;gap:7px;align-items:center;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted);font-weight:900;padding:7px 10px;font-size:.76rem;white-space:nowrap}
+.modules{display:grid;gap:8px;max-height:660px;overflow:auto;padding-right:4px}
+.module{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:10px;cursor:pointer;transition:.15s}
+.module:hover{transform:translateY(-1px)}.module.active{background:rgba(214,170,79,.18);border-color:rgba(214,170,79,.44)}
+.ico{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line);display:grid;place-items:center;font-size:1.15rem}
+.module strong{display:block;font-size:.88rem}.module small{display:block;color:var(--muted);font-size:.72rem;line-height:1.32}.module b{color:var(--gold2);font-size:.78rem}
+.workspace{display:grid;gap:20px}
+.grid-main{display:grid;grid-template-columns:minmax(350px,560px) 1fr;gap:20px;align-items:start}
+.board-wrap{display:grid;gap:14px}
+.board-tools{display:flex;flex-wrap:wrap;gap:8px}
+.chessboard{width:min(560px,100%);aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);border-radius:18px;overflow:hidden;border:6px solid #5f3e22;box-shadow:0 25px 65px rgba(0,0,0,.38);background:#5f3e22}
+.square{position:relative;display:grid;place-items:center;font-size:clamp(1.9rem,5vw,3.7rem);line-height:1;cursor:pointer;font-family:"Segoe UI Symbol","Noto Sans Symbols",serif}
+.square.light{background:var(--light);color:#1b1209}.square.dark{background:var(--dark);color:#1b1209}.square.sel{box-shadow:inset 0 0 0 4px #f8df72}.square.hl{box-shadow:inset 0 0 0 4px rgba(87,130,223,.75)}
+.coord{position:absolute;font-size:.68rem;font-weight:900;opacity:.55;left:4px;bottom:3px;color:#2a1a0a}
+.piecebar{display:flex;gap:6px;flex-wrap:wrap;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:10px}
+.piece{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:1.4rem;cursor:pointer}.piece.active{background:rgba(214,170,79,.25);border-color:var(--gold)}
+.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field{display:grid;gap:6px}.full{grid-column:1/-1}
+label{font-weight:900;font-size:.83rem;color:var(--text)}
+input,select,textarea{width:100%;border:1px solid var(--line);background:var(--bg2);color:var(--text);border-radius:14px;padding:11px 12px;font:inherit;outline:none}
+textarea{min-height:120px;resize:vertical}.hint{color:var(--muted);font-size:.76rem;line-height:1.35}
+.preview{min-height:150px;display:grid;place-items:center;background:var(--card2);border:1px dashed var(--line);border-radius:16px;color:var(--muted);text-align:center;padding:12px;overflow:hidden}.preview img{max-width:100%;max-height:230px;border-radius:12px}
+.result{position:sticky;top:92px}.empty{background:var(--card2);border:1px dashed var(--line);border-radius:16px;color:var(--muted);padding:14px;line-height:1.55}
+.sev{display:flex;align-items:center;gap:12px;background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}.dot{width:17px;height:17px;border-radius:50%;background:var(--green);box-shadow:0 0 0 7px rgba(63,111,74,.16)}
+.progress{height:10px;background:var(--card2);border:1px solid var(--line);border-radius:999px;overflow:hidden}.bar{height:100%;background:var(--green);width:0}
+.block{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}.block h5{margin:0 0 8px;font-size:.92rem}.block ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.52;font-size:.9rem}.block li+li{margin-top:4px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tab.active{background:rgba(214,170,79,.18);color:var(--gold2);border-color:rgba(214,170,79,.45)}
+.tabcontent{display:none}.tabcontent.active{display:block}
+.tablewrap{overflow:auto;border-radius:18px;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;background:var(--card2);min-width:780px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:.88rem}th{color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;background:rgba(214,170,79,.09)}tr:last-child td{border-bottom:0}
+.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-weight:900;font-size:.72rem;border:1px solid var(--line);white-space:nowrap}.green{background:#193721;color:#baf5c9}.yellow{background:#4a3a12;color:#ffe08a}.orange{background:#4c2c13;color:#ffc189}.red{background:#4b1d18;color:#ffb7ad}.blue{background:#1d2c51;color:#b9ccff}
+body.lightmode .green{background:#dff7e5;color:#216c2a}body.lightmode .yellow{background:#fff1bd;color:#755000}body.lightmode .orange{background:#ffe0bd;color:#8a4400}body.lightmode .red{background:#ffe1dc;color:#8d1e14}body.lightmode .blue{background:#dfe8ff;color:#234f9c}
+.history{display:grid;gap:8px}.hist{display:grid;grid-template-columns:1fr auto;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:11px}.hist strong{font-size:.87rem}.hist small{display:block;color:var(--muted);font-size:.78rem;line-height:1.35;margin-top:3px}
+.social-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.social-card{background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:15px;cursor:pointer}.social-card h4{margin:0 0 8px}.social-card p{margin:0;color:var(--muted);font-size:.86rem;line-height:1.45}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}.modal.show{display:flex}.mock{width:min(520px,100%);background:#fff;color:#111;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)}.mock-head{padding:16px 18px;font-weight:900;border-bottom:1px solid #ddd}.mock-body{padding:18px}.mock-img{height:260px;border-radius:18px;background:linear-gradient(135deg,#111,#6b4a24);display:grid;place-items:center;color:#f5d17c;font-size:4rem;margin:14px 0}.mock small{color:#666}.mock-actions{display:flex;gap:8px;padding:0 18px 18px}.mock-actions button{background:#eee;color:#111;border-color:#ddd}
+footer{text-align:center;color:var(--muted);font-size:.84rem;line-height:1.45;margin:28px 0 8px}
+@media(max-width:1180px){.hero,.layout,.grid-main{grid-template-columns:1fr}.sidebar,.result{position:static}.modules{max-height:none;grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.app{padding:12px}header{border-radius:20px;align-items:flex-start}.actions button{padding:9px 10px;font-size:.8rem}.hero h2{font-size:2.35rem}.card{padding:17px}.modules,.formgrid,.kpis,.social-grid{grid-template-columns:1fr}.hist{grid-template-columns:1fr}.chessboard{border-width:4px}}
+@media print{header,.sidebar,.hero,.tabs,.actions,.board-tools,.piecebar,footer,.modal{display:none!important}.layout,.grid-main{display:block}.card{box-shadow:none;border:1px solid #777;margin-bottom:12px}.result{position:static}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <div class="logo">♞</div>
+    <div><h1>CHESSDX 360</h1><div class="sub">Diagnóstico · Análisis · Simulación · Formación</div></div>
+  </div>
+  <div class="actions">
+    <button onclick="scrollDiag()">Diagnosticar</button>
+    <button onclick="loadDemo()">Demo</button>
+    <button onclick="toggleTheme()">Modo</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="card">
+    <span class="eyebrow">♟ Plataforma Inteligente de Diagnóstico Ajedrecístico</span>
+    <h2>Convierte posiciones, imágenes y partidas en explicación ajedrecística.</h2>
+    <p>Sube una imagen, pega un FEN o PGN, escribe un prompt, edita el tablero y genera un diagnóstico con legalidad, severidad, mejor jugada, causa probable, explicación e informe.</p>
+    <div class="actions">
+      <button class="primary" onclick="scrollDiag()">Ejecutar diagnóstico</button>
+      <button onclick="setModule('loss')">Por qué perdí</button>
+      <button onclick="setTab('trace')">Ver módulos</button>
+    </div>
+    <div class="notice">Prototipo HTML5 local. La identificación histórica y el análisis de motor se simulan salvo integración futura de Stockfish/IA. No sustituye árbitro, FIDE ni FEDA. Las redes sociales se simulan internamente y no enlazan a plataformas reales.</div>
+  </div>
+  <aside class="card">
+    <div class="title"><div><h3>Dashboard local</h3><p>Historial guardado sólo en este navegador.</p></div><span class="badge">localStorage</span></div>
+    <div class="kpis">
+      <div class="kpi"><span>Diagnósticos</span><strong id="kTotal">0</strong></div>
+      <div class="kpi"><span>Críticos</span><strong id="kCrit">0</strong></div>
+      <div class="kpi"><span>Módulos</span><strong>14</strong></div>
+      <div class="kpi"><span>Confianza media</span><strong id="kConf">0%</strong></div>
+    </div>
+  </aside>
+</section>
+
+<main class="layout">
+<aside class="sidebar">
+  <section class="card">
+    <div class="title"><div><h3>Módulos</h3><p>Selecciona tipo de diagnóstico.</p></div><span class="badge">14/14</span></div>
+    <div class="modules" id="moduleList"></div>
+  </section>
+  <section class="card">
+    <div class="title"><div><h3>Historial</h3><p>Últimos análisis locales.</p></div></div>
+    <div class="actions" style="margin-top:0;margin-bottom:10px">
+      <button onclick="exportHistory()">Exportar</button>
+      <button class="danger" onclick="clearHistory()">Limpiar</button>
+    </div>
+    <div class="history" id="history"></div>
+  </section>
+</aside>
+
+<section class="workspace">
+<section class="card" id="diagnosisPanel">
+  <div class="title">
+    <div><h3>Motor diagnóstico</h3><p>Entrada → validación → reconstrucción → análisis → explicación → informe.</p></div>
+    <span class="badge" id="moduleBadge">Módulo 1</span>
+  </div>
+
+  <div class="grid-main">
+    <div class="board-wrap">
+      <div class="info" id="moduleInfo"></div>
+      <div class="chessboard" id="board"></div>
+      <div class="piecebar" id="pieceBar"></div>
+      <div class="board-tools">
+        <button onclick="startPosition()">Inicial</button>
+        <button onclick="clearBoard()">Limpiar</button>
+        <button onclick="flipBoard()">Girar</button>
+        <button onclick="exportFENToInput()">Exportar FEN</button>
+        <button onclick="importFENFromInput()">Importar FEN</button>
+      </div>
+    </div>
+
+    <div>
+      <form id="diagForm">
+        <div class="formgrid">
+          <div class="field"><label>Módulo activo</label><select id="moduleSelect"></select></div>
+          <div class="field"><label>Bando que mueve</label><select id="side"><option value="w">Blancas</option><option value="b">Negras</option></select></div>
+          <div class="field full"><label>FEN</label><input id="fen" placeholder="Pega FEN o genera desde tablero"></div>
+          <div class="field full"><label>PGN</label><textarea id="pgn" placeholder="Pega aquí una partida PGN si quieres analizar derrota, apertura o partida histórica."></textarea></div>
+          <div class="field full"><label>Prompt texto + contexto</label><textarea id="prompt" placeholder="Ej.: Creo que es una partida de Fischer. ¿Cómo acabó? / Juegan blancas y mate en 2 / ¿Por qué perdieron las negras?"></textarea></div>
+          <div class="field full"><label>Imagen de tablero, problema o partida</label><input id="imageInput" type="file" accept="image/*"><div class="preview" id="preview">Previsualización de imagen subida</div></div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Generar diagnóstico</button>
+          <button type="button" onclick="solveNewspaper()">Resolver problema</button>
+          <button type="button" onclick="generateReport()">Informe</button>
+          <button type="button" onclick="window.print()">Imprimir/PDF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="card result">
+  <div class="title"><div><h3>Resultado</h3><p id="resultMeta">Sin ejecutar</p></div><span class="badge" id="confidence">Confianza 0%</span></div>
+  <div id="result" class="empty">Introduce una posición, imagen, FEN, PGN o prompt y pulsa “Generar diagnóstico”.</div>
+</section>
+
+<section class="card">
+  <div class="tabs">
+    <button class="tab active" id="tabDashboard" onclick="setTab('dashboard')">Dashboard</button>
+    <button class="tab" id="tabTrace" onclick="setTab('trace')">Trazabilidad</button>
+    <button class="tab" id="tabNorms" onclick="setTab('norms')">Normativa y sedes</button>
+    <button class="tab" id="tabSocial" onclick="setTab('social')">Redes virtuales</button>
+  </div>
+
+  <div class="tabcontent active" id="dashboard">
+    <div class="title"><div><h3>Panel operativo</h3><p>Resumen del último diagnóstico y controles.</p></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Elemento</th><th>Estado</th><th>Lectura</th><th>Acción</th></tr></thead><tbody id="dashRows"></tbody></table></div>
+  </div>
+
+  <div class="tabcontent" id="trace">
+    <div class="title"><div><h3>Tabla de trazabilidad funcional</h3><p>14 módulos incluidos desde el prompt maestro.</p></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Nº</th><th>Módulo</th><th>Entrada</th><th>Análisis</th><th>Salida</th></tr></thead><tbody id="traceRows"></tbody></table></div>
+  </div>
+
+  <div class="tabcontent" id="norms">
+    <div class="title"><div><h3>Normativa y sedes oficiales en España</h3><p>Directorio inicial verificable. La versión comercial debe incluir actualización administrativa.</p></div></div>
+    <div class="notice" style="margin-top:0">“Las decisiones oficiales en torneo corresponden al árbitro, a la organización y a la normativa vigente FIDE/FEDA aplicable.”</div>
+    <div class="tablewrap" style="margin-top:14px"><table><thead><tr><th>Bloque</th><th>Contenido</th><th>Estado</th></tr></thead><tbody id="normRows"></tbody></table></div>
+  </div>
+
+  <div class="tabcontent" id="social">
+    <div class="title"><div><h3>Simulador interno de redes sociales</h3><p>No enlaza a redes reales, no pide credenciales y no publica contenido.</p></div></div>
+    <div class="social-grid">
+      <div class="social-card" onclick="openMock('Facebook')"><h4>Facebook virtual</h4><p>Post interno con tablero, texto y comentarios ficticios.</p></div>
+      <div class="social-card" onclick="openMock('Instagram')"><h4>Instagram virtual</h4><p>Carrusel visual con diagrama, hashtags y lección.</p></div>
+      <div class="social-card" onclick="openMock('TikTok')"><h4>TikTok virtual</h4><p>Mockup vertical de táctica o mate del día.</p></div>
+      <div class="social-card" onclick="openMock('LinkedIn')"><h4>LinkedIn virtual</h4><p>Post profesional sobre análisis, club o formación.</p></div>
+    </div>
+  </div>
+</section>
+</section>
+</main>
+
+<footer>CHESSDX 360 · Archivo HTML5 único · Funciona localmente en Chrome · Prototipo orientativo para diagnóstico ajedrecístico.</footer>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target.id==='modal')closeMock()">
+  <div class="mock" id="mock"></div>
+</div>
+
+<script>
+const MODULES=[
+["image","📷","Captura por imagen","Foto/captura","Visión + FEN","Tablero reconstruido"],
+["prompt","✍️","Entrada por prompt","Texto/contexto","NLP + entidades","Intención y diagnóstico"],
+["board","♟","Tablero virtual","Movimientos","Reglas","Simulación jugable"],
+["famous","🏛","Partidas famosas","Imagen + texto","Búsqueda PGN","Partida candidata"],
+["loss","💥","Diagnóstico de derrota","PGN/FEN","Motor + errores","Causa de derrota"],
+["newspaper","📰","Problemas de periódico","Imagen/FEN","Mate/táctica","Solución"],
+["tactics","⚔️","Análisis táctico","Posición","Amenazas","Mejor jugada"],
+["strategy","🧠","Análisis estratégico","Posición","Estructura","Plan"],
+["engine","⚙️","Motor de evaluación","FEN/PGN","Stockfish/simulado","Evaluación"],
+["history","📚","Base histórica","PGN/FEN/texto","Matching","Final de partida"],
+["opening","🚪","Aperturas","PGN","ECO","Diagnóstico"],
+["endgame","♔","Finales","FEN","Técnica","Plan correcto"],
+["report","📄","Informes","Diagnóstico","Composición","PDF/HTML/TXT"],
+["social","🌐","Redes virtuales","Análisis + imagen","Mockup","Imagen simulada"]
+];
+const pieces={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+const pieceChars=["K","Q","R","B","N","P","k","q","r","b","n","p",""];
+let board=[],flipped=false,selectedPiece="P",selectedSquare=null,current="image",lastResult=null,imgLoaded=false;
+const KEY="chessdx360_history_v1";
+const $=id=>document.getElementById(id);
+function init(){
+  startPosition(false); renderModules(); renderPieceBar(); fillSelect(); renderTrace(); renderNorms(); renderDash(); renderHistory(); updateKpis();
+  $("diagForm").addEventListener("submit",e=>{e.preventDefault(); runDiagnosis()});
+  $("imageInput").addEventListener("change",previewImage);
+  restoreTheme();
+}
+function renderModules(){
+  $("moduleList").innerHTML=MODULES.map((m,i)=>`<div class="module ${m[0]===current?'active':''}" onclick="setModule('${m[0]}')"><div class="ico">${m[1]}</div><div><strong>${m[2]}</strong><small>${m[3]} → ${m[5]}</small></div><b>${String(i+1).padStart(2,"0")}</b></div>`).join("");
+}
+function fillSelect(){
+  $("moduleSelect").innerHTML=MODULES.map(m=>`<option value="${m[0]}">${m[2]}</option>`).join("");
+  $("moduleSelect").onchange=e=>setModule(e.target.value);
+}
+function setModule(id){
+  current=id; $("moduleSelect").value=id; renderModules();
+  const m=MODULES.find(x=>x[0]===id), idx=MODULES.findIndex(x=>x[0]===id)+1;
+  $("moduleBadge").textContent=`Módulo ${idx}`;
+  $("moduleInfo").innerHTML=`<h3 style="margin:0 0 6px">${m[1]} ${m[2]}</h3><p style="color:var(--muted);line-height:1.5;margin:0"><b>Entrada:</b> ${m[3]} · <b>Análisis:</b> ${m[4]} · <b>Salida:</b> ${m[5]}</p>`;
+  if(id==="social") setTab("social");
+}
+function renderPieceBar(){
+  $("pieceBar").innerHTML=pieceChars.map(p=>`<button type="button" class="piece ${p===selectedPiece?'active':''}" onclick="selectPiece('${p}')">${p?pieces[p]:"∅"}</button>`).join("");
+}
+function selectPiece(p){selectedPiece=p;renderPieceBar()}
+function startPosition(render=true){
+  const rows=["rnbqkbnr","pppppppp","........","........","........","........","PPPPPPPP","RNBQKBNR"];
+  board=rows.join("").split("").map(x=>x==="."?"":x); if(render) renderBoard();
+}
+function clearBoard(){board=Array(64).fill("");renderBoard();updateFenFromBoard()}
+function flipBoard(){flipped=!flipped;renderBoard()}
+function renderBoard(){
+  const files=["a","b","c","d","e","f","g","h"], ranks=["8","7","6","5","4","3","2","1"];
+  let html="";
+  for(let v=0;v<64;v++){
+    let i=flipped?63-v:v, r=Math.floor(i/8), c=i%8, light=(r+c)%2===0, coord=files[c]+ranks[r];
+    html+=`<div class="square ${light?'light':'dark'} ${selectedSquare===i?'sel':''}" onclick="squareClick(${i})"><span>${board[i]?pieces[board[i]]:""}</span><small class="coord">${coord}</small></div>`;
+  }
+  $("board").innerHTML=html; updateFenFromBoard();
+}
+function squareClick(i){
+  if(selectedPiece===""){board[i]="";selectedSquare=i;renderBoard();return}
+  board[i]=selectedPiece; selectedSquare=i; renderBoard();
+}
+function boardPartToFen(){
+  let fen="";
+  for(let r=0;r<8;r++){
+    let empty=0;
+    for(let c=0;c<8;c++){
+      let p=board[r*8+c];
+      if(!p) empty++; else{if(empty){fen+=empty;empty=0} fen+=p}
+    }
+    if(empty) fen+=empty; if(r<7) fen+="/";
+  }
+  return fen;
+}
+function updateFenFromBoard(){
+  if(!$("fen"))return;
+  $("fen").value=boardPartToFen()+" "+$("side").value+" - - 0 1";
+}
+function exportFENToInput(){updateFenFromBoard();toast("FEN exportado desde el tablero.")}
+function importFENFromInput(){
+  const fen=$("fen").value.trim(); const part=fen.split(/\s+/)[0]; let arr=[];
+  try{
+    part.split("/").forEach(row=>{for(const ch of row){if(/[1-8]/.test(ch)){for(let i=0;i<parseInt(ch);i++)arr.push("")}else if(pieces[ch])arr.push(ch);else throw new Error("pieza")}})
+    if(arr.length!==64)throw new Error("long"); board=arr; const side=fen.split(/\s+/)[1]; if(side==="w"||side==="b")$("side").value=side; renderBoard(); toast("FEN importado.");
+  }catch(e){toast("FEN inválido o incompleto.")}
+}
+function validate(){
+  const wk=board.filter(x=>x==="K").length,bk=board.filter(x=>x==="k").length,pawns=board.filter(x=>x==="P"||x==="p").length;
+  let issues=[]; if(wk!==1)issues.push("Debe existir exactamente un rey blanco."); if(bk!==1)issues.push("Debe existir exactamente un rey negro."); if(pawns>16)issues.push("Hay más de 16 peones."); return issues;
+}
+function previewImage(e){
+  const f=e.target.files[0]; if(!f){imgLoaded=false;return}
+  const r=new FileReader(); r.onload=ev=>{$("preview").innerHTML=`<img src="${ev.target.result}" alt="imagen cargada">`;imgLoaded=true}; r.readAsDataURL(f);
+}
+function material(){
+  const val={P:1,N:3,B:3,R:5,Q:9,K:0,p:-1,n:-3,b:-3,r:-5,q:-9,k:0}; return board.reduce((s,p)=>s+(val[p]||0),0);
+}
+function phase(){
+  const count=board.filter(Boolean).length; if(count>24)return"apertura/medio juego"; if(count>12)return"medio juego/final"; return"final";
+}
+function runDiagnosis(kind){
+  const mod=kind||current, prompt=$("prompt").value.toLowerCase(), pgn=$("pgn").value, fen=$("fen").value, issues=validate();
+  let score=0,conf=64,problems=[],causes=[],recs=[],evidence=[],best=[],sev;
+  function add(n,p,c,r,e){score+=n;if(p&&!problems.includes(p))problems.push(p);if(c&&!causes.includes(c))causes.push(c);if(r&&!recs.includes(r))recs.push(r);if(e&&!evidence.includes(e))evidence.push(e)}
+  if(issues.length){add(25,"Posición legalmente dudosa","La validación básica detecta incoherencias.","Corregir tablero o FEN antes de análisis definitivo.",issues.join(" "));conf-=18}
+  if(imgLoaded){add(6,"Imagen cargada","La imagen está disponible para reconstrucción asistida.","Usar corrección manual si la identificación visual es dudosa.","Imagen local cargada.");conf+=6}
+  if(fen.trim()) add(4,"FEN disponible","Existe posición estructurada para análisis.","Validar FEN y usar tablero virtual.","FEN informado.");
+  if(pgn.trim()) add(4,"PGN disponible","Existe secuencia de partida para análisis.","Evaluar momento crítico jugada a jugada.","PGN informado.");
+  if(prompt.trim()) add(4,"Prompt contextual disponible","El texto orienta intención y contexto.","Cruzar texto con imagen/FEN/PGN.","Prompt informado.");
+  switch(mod){
+    case"image":
+      if(!imgLoaded)add(22,"Falta imagen","El módulo requiere una imagen de tablero o diagrama.","Subir captura/foto y revisar orientación.","No hay imagen cargada.");
+      else {add(18,"Reconstrucción visual simulada","En esta versión se previsualiza imagen, pero no se ejecuta visión real.","Confirmar manualmente casillas dudosas en tablero.","MVP local sin IA real."); best.push("Generar FEN provisional y validar legalidad antes de analizar.");}
+      break;
+    case"prompt":
+      if(!prompt.trim())add(22,"Prompt vacío","No hay contexto textual.","Escribir pregunta concreta: partida famosa, derrota, mate o plan.","Prompt no informado.");
+      else if(prompt.includes("por qué")||prompt.includes("perd")){setModule("loss");return runDiagnosis("loss")}
+      else if(prompt.includes("mate")||prompt.includes("juegan")){setModule("newspaper");return runDiagnosis("newspaper")}
+      else if(prompt.includes("fischer")||prompt.includes("capablanca")||prompt.includes("kasparov")||prompt.includes("morphy")){setModule("famous");return runDiagnosis("famous")}
+      else add(14,"Intención interpretada","El prompt describe una consulta ajedrecística general.","Usar módulo táctico/estratégico según objetivo.","Texto procesado.");
+      break;
+    case"board":
+      add(12,"Tablero editable activo","La posición puede simularse manualmente.","Mover piezas, exportar FEN y analizar.","Tablero 8x8 cargado."); best.push("Validar legalidad y analizar táctica inmediata.");
+      break;
+    case"famous":
+      let candidates=[];
+      if(prompt.includes("fischer"))candidates.push("Fischer vs Byrne, 1956; Fischer vs Spassky, 1972");
+      if(prompt.includes("capablanca"))candidates.push("Capablanca vs Tartakower, Nueva York 1924");
+      if(prompt.includes("kasparov"))candidates.push("Kasparov vs Topalov, Wijk aan Zee 1999");
+      if(prompt.includes("morphy"))candidates.push("Morphy vs Duque de Brunswick e Isouard, París 1858");
+      if(candidates.length){add(18,"Partida histórica candidata","El texto coincide con nombres clásicos.","Mostrar ranking y no afirmar identificación absoluta.",candidates.join(" | "));conf+=8;best.push("Identificación no concluyente sin base PGN completa: revisar candidatos.");}
+      else add(18,"Identificación histórica no concluyente","No hay suficiente contexto o base local.","Añadir jugadores, año, torneo, apertura o PGN.", "Sin coincidencias fuertes.");
+      break;
+    case"loss":
+      let bl=(pgn.match(/\?\?/g)||[]).length, er=(pgn.match(/\?/g)||[]).length;
+      if(bl>0)add(35,"Blunder detectado en PGN","La notación contiene marca de error grave.","Revisar la jugada marcada y comparar alternativa.",bl+" marcas ??");
+      else if(er>0)add(22,"Errores marcados en PGN","La partida contiene jugadas señaladas como dudosas.","Analizar transición antes/después del error.",er+" marcas ?");
+      else add(18,"Causa de derrota probable no localizada","Sin motor real no puede aislarse una jugada exacta.","Añadir PGN comentado o integrar Stockfish para evaluación por jugada.","PGN sin marcas de error.");
+      if(material()< -2)add(18,"Desventaja material de blancas","El tablero actual muestra déficit material para blancas.","Revisar captura o cambio que originó déficit.","Balance material: "+material());
+      if(material()> 2)add(18,"Desventaja material de negras","El tablero actual muestra déficit material para negras.","Revisar captura o cambio que originó déficit.","Balance material: "+material());
+      best.push("Buscar momento crítico: primera jugada donde cambia evaluación o se pierde material/rey.");
+      break;
+    case"newspaper":
+      add(18,"Problema de periódico interpretado","Se resolverá como táctica/mate en N de forma orientativa.","Para solución exacta integrar motor Stockfish.", prompt.includes("mate")?"Condición de mate detectada.":"Condición no especificada.");
+      if(prompt.includes("mate en 1"))best.push("Priorizar todos los jaques legales: el mate en 1 debe ser una jugada forzada.");
+      else if(prompt.includes("mate en 2"))best.push("Buscar jugada silenciosa que amenace mate imparable.");
+      else best.push("Candidatas: jaques, capturas y amenazas; validar con motor.");
+      break;
+    case"tactics":
+      add(16,"Análisis táctico orientativo","Se revisan amenazas, piezas indefensas y seguridad del rey.","Priorizar jaques, capturas y amenazas directas.","Fase: "+phase());
+      best.push("Orden de cálculo: jaques → capturas → amenazas → defensas forzadas.");
+      break;
+    case"strategy":
+      add(14,"Análisis estratégico orientativo","La fase y material sugieren plan posicional.","Revisar estructura de peones, columnas y rey.", "Fase: "+phase());
+      best.push(phase().includes("final")?"Activar rey y crear peón pasado.":"Mejorar peor pieza y controlar columna abierta.");
+      break;
+    case"engine":
+      add(18,"Motor simulado","La versión local no incorpora Stockfish real por defecto.","Integrar Stockfish WASM para evaluación objetiva.", "Evaluación heurística material: "+material());
+      best.push(material()>=0?"Blancas tienen balance material favorable o igual.":"Negras tienen balance material favorable.");
+      break;
+    case"history":
+      add(16,"Base histórica local no cargada","Se requiere base PGN para matching real.","Incorporar PGN con FEN por jugada y ranking de similitud.","Módulo preparado.");
+      break;
+    case"opening":
+      const moves=(pgn.match(/\d+\./g)||[]).length;
+      if(moves<8)add(18,"Apertura en fase inicial","Pocas jugadas detectadas.","Validar desarrollo, centro y enroque.",moves+" jugadas numeradas.");
+      else add(12,"Apertura avanzada","Hay suficiente PGN para clasificar ECO si se integra base.","Detectar desviación y jugada crítica.",moves+" jugadas numeradas.");
+      best.push("Checklist apertura: centro, desarrollo, rey seguro, no mover la misma pieza sin causa.");
+      break;
+    case"endgame":
+      add(14,"Final detectado u objetivo de final","El análisis debe centrarse en técnica y resultado teórico.","Revisar actividad del rey, peones pasados y tablas.", "Piezas en tablero: "+board.filter(Boolean).length);
+      best.push("Principio: activar rey, calcular oposición/zugzwang y no precipitar cambios.");
+      break;
+    case"report":
+      add(10,"Informe preparado","Puede imprimirse como PDF desde Chrome.","Ejecutar diagnóstico y pulsar imprimir/PDF.","Módulo informe.");
+      break;
+    case"social":
+      add(10,"Simulación social disponible","El contenido se crea como mockup interno no oficial.","Elegir red virtual y descargar/copiar contenido.","Sin enlace externo real.");
+      setTab("social");
+      break;
+  }
+  if(!best.length)best.push("Mejor jugada no calculada con motor real. Integrar Stockfish para línea exacta.");
+  if(!problems.length)add(5,"Sin problema crítico detectado","La validación básica no muestra alertas relevantes.","Analizar con módulo táctico o motor para mayor precisión.","Sin alertas.");
+  score=Math.max(0,Math.min(100,Math.round(score)));
+  sev=severity(score,issues.length);
+  conf=Math.max(25,Math.min(95,Math.round(conf+evidence.length*2-issues.length*6)));
+  lastResult={id:Date.now(),date:new Date().toISOString(),module:MODULES.find(x=>x[0]===mod)[2],score,sev,conf,problems,causes,recs,evidence,best,fen:$("fen").value,prompt:$("prompt").value};
+  drawResult(lastResult); save(lastResult); renderHistory(); updateKpis(); renderDash(); setTab("dashboard");
+}
+function solveNewspaper(){setModule("newspaper");runDiagnosis("newspaper")}
+function severity(score,issues){if(issues&&score<45)return{cls:"yellow",txt:"Amarillo — Atención",desc:"La posición requiere corrección o validación."}; if(score>=75)return{cls:"red",txt:"Rojo — Crítico",desc:"Blunder, pérdida decisiva o incoherencia severa."}; if(score>=50)return{cls:"orange",txt:"Naranja — Error grave",desc:"Existe pérdida probable de ventaja, material o seguridad."}; if(score>=25)return{cls:"yellow",txt:"Amarillo — Atención",desc:"Existe imprecisión o riesgo táctico/estratégico."}; return{cls:"green",txt:"Verde — Correcto",desc:"No se detecta desviación crítica."}}
+function drawResult(r){
+  const colors={green:"var(--green)",yellow:"var(--yellow)",orange:"var(--orange)",red:"var(--red)"}; $("resultMeta").textContent=`${r.module} · Riesgo ${r.score}/100`; $("confidence").textContent=`Confianza ${r.conf}%`;
+  $("result").className=""; $("result").innerHTML=`<div class="sev"><div class="dot" style="background:${colors[r.sev.cls]}"></div><div><b>${r.sev.txt}</b><br><span class="hint">${r.sev.desc}</span></div></div><div class="progress"><div class="bar" style="width:${r.score}%;background:${colors[r.sev.cls]}"></div></div>${sec("Problema detectado",r.problems)}${sec("Causa probable",r.causes)}${sec("Mejor jugada / línea candidata",r.best)}${sec("Recomendación",r.recs)}${sec("Evidencia usada",r.evidence)}<div class="notice">El análisis es orientativo. Para evaluación objetiva integrar Stockfish WASM o backend con motor.</div>`;
+}
+function sec(t,a){return `<div class="block"><h5>${t}</h5><ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`}
+function getHist(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function setHist(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,80)))}
+function save(r){let a=getHist();a.unshift(r);setHist(a)}
+function renderHistory(){
+  const a=getHist(); $("history").innerHTML=a.length?a.slice(0,12).map(x=>`<div class="hist"><div><strong>${esc(x.module)}</strong><small>${new Date(x.date).toLocaleString()} · ${esc(x.problems[0]||"sin alerta")}</small></div><span class="pill ${x.sev.cls}">${x.sev.txt.split(" — ")[0]}</span></div>`).join(""):`<div class="empty">Sin diagnósticos guardados.</div>`;
+}
+function updateKpis(){const a=getHist();$("kTotal").textContent=a.length;$("kCrit").textContent=a.filter(x=>x.sev.cls==="red").length;$("kConf").textContent=(a.length?Math.round(a.reduce((s,x)=>s+x.conf,0)/a.length):0)+"%"}
+function renderDash(){
+  const a=getHist(),x=lastResult||a[0]; let rows=[];
+  if(x)rows.push(["Último diagnóstico",`<span class="pill ${x.sev.cls}">${x.sev.txt}</span>`,`${esc(x.module)}: ${esc(x.problems[0]||"sin alerta")}`,"Revisar recomendación e informe."]);
+  else rows.push(["Último diagnóstico",`<span class="pill green">Sin datos</span>`,"Aún no hay diagnóstico.","Ejecutar primer análisis."]);
+  rows.push(["Tablero",`<span class="pill blue">${board.filter(Boolean).length} piezas</span>`,"Posición editable con FEN exportable.","Validar legalidad antes de concluir."]);
+  rows.push(["Imagen",`<span class="pill ${imgLoaded?'green':'yellow'}">${imgLoaded?'Cargada':'No cargada'}</span>`,"Previsualización local de imagen.","Usar corrección manual si hay dudas."]);
+  rows.push(["Normativa",`<span class="pill yellow">Verificable</span>`,"Directorio y reglamentos requieren actualización oficial.","Actualizar desde FIDE/FEDA en versión comercial."]);
+  $("dashRows").innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("");
+}
+function renderTrace(){
+  $("traceRows").innerHTML=MODULES.map((m,i)=>`<tr><td>${i+1}</td><td>${m[1]} ${m[2]}</td><td>${m[3]}</td><td>${m[4]}</td><td>${m[5]}</td></tr>`).join("");
+}
+function renderNorms(){
+  const norms=["Leyes del Ajedrez FIDE","Reglas básicas de juego","Reglas de competición","Reglamento de árbitros FIDE","Sistema Suizo FIDE","Reglamentos de desempates","Ajedrez estándar, rápido y relámpago","Normativa anti-trampas","Código ético y disciplinario FIDE","Reglas de ajedrez online","FEDA como referencia española","Federaciones autonómicas"];
+  const fed=["Federación Española de Ajedrez — FEDA","Federación Andaluza de Ajedrez","Federación Aragonesa de Ajedrez","Federación de Ajedrez del Principado de Asturias","Federación Balear de Ajedrez","Federación Canaria de Ajedrez","Federación Catalana de Ajedrez","Federación de Ajedrez de Ceuta","Federación Cántabra de Ajedrez","Federación de Ajedrez de Castilla y León","Federación de Ajedrez de Castilla-La Mancha","Federación Extremeña de Ajedrez","Federación Gallega de Ajedrez","Federación Madrileña de Ajedrez","Federación Melillense de Ajedrez","Federación de Ajedrez de la Región de Murcia","Federación Navarra de Ajedrez","Federación Riojana de Ajedrez","Federación de Ajedrez de la Comunidad Valenciana","Federación Vasca de Ajedrez"];
+  $("normRows").innerHTML=[...norms.map(n=>["Normativa",n,"Verificar en FIDE/FEDA"]),...fed.map(f=>["Sede",f,"Directorio inicial verificable"])].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><span class="pill yellow">${r[2]}</span></td></tr>`).join("");
+}
+function setTab(t){
+  ["dashboard","trace","norms","social"].forEach(x=>{ $(x).classList.toggle("active",x===t); $("tab"+cap(x)).classList.toggle("active",x===t);});
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+function openMock(network){
+  const text= lastResult? `${lastResult.module}: ${lastResult.problems[0]}. ${lastResult.best[0]||""}` : "Problema del día: encuentra la mejor jugada en esta posición.";
+  $("mock").innerHTML=`<div class="mock-head">${network} virtual · Simulación visual no oficial</div><div class="mock-body"><small>URL interna simulada: /social/${network.toLowerCase()}-virtual/chessdx-demo</small><div class="mock-img">♞</div><h3 style="margin:0 0 8px">CHESSDX 360</h3><p style="line-height:1.5">${esc(text)}</p><p><b>#ajedrez #chess #tactica #entrenamiento</b></p><small>No enlaza a redes reales. No publica contenido. No usa API externa.</small></div><div class="mock-actions"><button onclick="copyMock()">Copiar texto</button><button onclick="closeMock()">Cerrar</button></div>`;
+  $("modal").classList.add("show");
+}
+function closeMock(){$("modal").classList.remove("show")}
+function copyMock(){navigator.clipboard&&navigator.clipboard.writeText("CHESSDX 360 — Simulación visual no oficial de contenido ajedrecístico.");toast("Texto copiado.")}
+function generateReport(){if(!lastResult)runDiagnosis(); window.print();}
+function exportHistory(){const blob=new Blob([JSON.stringify(getHist(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="chessdx360_historial.json";a.click();URL.revokeObjectURL(a.href)}
+function clearHistory(){if(confirm("¿Eliminar historial local?")){localStorage.removeItem(KEY);renderHistory();updateKpis();renderDash()}}
+function loadDemo(){
+  setModule("famous"); $("prompt").value="Creo que esta posición pertenece a una partida clásica de Fischer. ¿Cómo acabó y cuál fue la idea táctica?"; $("pgn").value='1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 ??'; startPosition(); runDiagnosis("famous"); scrollDiag();
+}
+function scrollDiag(){$("diagnosisPanel").scrollIntoView({behavior:"smooth",block:"start"})}
+function toggleTheme(){document.body.classList.toggle("lightmode");localStorage.setItem("chessdx_theme",document.body.classList.contains("lightmode")?"light":"dark")}
+function restoreTheme(){if(localStorage.getItem("chessdx_theme")==="light")document.body.classList.add("lightmode")}
+function toast(msg){const t=document.createElement("div");t.textContent=msg;t.style.cssText="position:fixed;right:18px;bottom:18px;background:#111;color:#fff;padding:12px 14px;border-radius:14px;z-index:99;box-shadow:0 12px 30px rgba(0,0,0,.3);font-weight:800";document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+function esc(s){return String(s??"").replace(/[&<>'"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[m]))}
+init();
+</script>
+</body>
+</html>
